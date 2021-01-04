@@ -65,30 +65,70 @@
 			this.main(5000, 100, 100);
 		},
 		methods:{
-			main(Num, Speed, Flash) {
+			TCPClient() {
+				// 创建一个Socket实例bai
+				var socket = new WebSocket("ws://louisyoung.work:12000");
+				var that = this;
+				// 打开Socket
+				socket.onopen = function(event) {
+					// 发送初始化消息
+					socket.send("Receiver Ready");
+					that.$toast.success('连接服务器成功');
+					console.log("Receiver Ready");
+
+					var self = that
+					// 监听消息
+					socket.onmessage = function(event) {
+						self.DATA.shift()
+						self.DATA.push(event.data)
+						console.log(event.data);
+					};
+
+					// 监听Socket的关闭
+					socket.onclose = function(event) {
+						that.$toast.fail('断开连接');
+						console.log("Connection closed");
+					};
+
+					// 关闭Socket…
+					//socket.close()
+				};
+			},
+
+			init(Num) {
 				let i = 1;
 				this.DATA = [];
 				this.VALUE = [];
-				for (let item in pulse.pulseData){
-					i++;
-					let value = pulse.pulseData.shift();
-					this.DATA.push(value)
-					if (i === Num){
+				this.DATALength = Num;
+				// 初始化，Num决定图表长度
+				while (true) {
+					this.DATA.push(0)
+					this.VALUE.push("time")
+					if (i === Num) {
+						i = null;
 						break;
 					}
+					i ++;
 				}
+			},
 
-				for (let j = 0; j < Num; j++) {
-					this.VALUE.push("time")
-				}
+			main(Num, Speed, Flash) {
+				/* Num：数据显示宽度
+				 * Speed：单次更新个数
+				 * Flash：更新间隔时间
+				 */
 
-				this.DATALength = this.DATA.length;
 
+				// 数据初始化
+				this.init(Num)
+				// console.log(this.DATA);
 
-				console.log(this.DATA);
+				// 建立WebSocket连接
+				this.TCPClient()
 
 				// 基于准备好的dom，初始化echarts实例
 				this.GlobalInit()
+				// this.RequireInit()
 
 				// 绘制图表
 				this.myChart.setOption(this.options);
@@ -103,14 +143,8 @@
 				});
 
 				const that = this;
+				// 更新图表
 				setInterval(function () {
-
-					for (let i = 0; i < Speed; i++) {
-						let value = pulse.pulseData.shift();
-						that.DATA.shift();
-						that.DATA.push(value);
-					}
-
 					that.myChart.setOption({
 						series: [{
 							data: that.DATA
@@ -137,6 +171,8 @@
 				require('echarts/lib/component/title');
 				this.myChart = echarts.init(document.getElementById('main'));
 			},
+
+
 		}
 	}
 </script>
