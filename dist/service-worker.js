@@ -15,7 +15,7 @@ importScripts("/workbox-v4.3.1/workbox-sw.js");
 workbox.setConfig({modulePathPrefix: "/workbox-v4.3.1"});
 
 importScripts(
-  "/precache-manifest.bf26a7085eb22f49a73d78c5f37c537d.js"
+  "/precache-manifest.a58ba80847fab4e89dc54d4451097e62.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "pulse-xiao"});
