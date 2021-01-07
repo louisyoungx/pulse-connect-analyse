@@ -24,24 +24,24 @@
             <van-icon size="24" class="right-icon" name="setting-o" @click="goSettings" />
         </div>
         <div class="cblock user-links">
-            <van-cell icon="records" title="我的订单" value="全部订单" is-link to="/member/order" />
+            <van-cell icon="records" title="我的记录" value="全部记录" is-link to="/member/order" />
             <van-row>
                 <van-col span="6">
                     <van-tag v-if="counts[0] > 0" round type="danger">{{counts[0]}}</van-tag>
                     <router-link to="/member/order?status=0">
-                        <van-icon name="pending-payment" />待付款
+                        <van-icon name="pending-payment" />本地数据
                     </router-link>
                 </van-col>
                 <van-col span="6">
                     <van-tag v-if="counts[1] > 0" round type="danger">{{counts[1]}}</van-tag>
                     <router-link to="/member/order?status=1">
-                        <van-icon name="records" />待发货
+                        <van-icon name="records" />云数据
                     </router-link>
                 </van-col>
                 <van-col span="6">
                     <van-tag v-if="counts[2] > 0" round type="danger">{{counts[2]}}</van-tag>
                     <router-link to="/member/order?status=2">
-                        <van-icon name="tosend" />待收货
+                        <van-icon name="tosend" />使用记录
                     </router-link>
                 </van-col>
                 <van-col span="6">
