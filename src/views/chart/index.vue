@@ -67,26 +67,33 @@
         },
         methods: {
             TCPClient() {
-                // 创建一个Socket实例bai
-                var socket = new WebSocket("ws://louisyoung.work:12000");
+                const that = this;
+                var socket = new WebSocket("ws://louisyoung.work:12000"); // 创建一个Socket实例
                 socket.onerror = function () {
                     this.ConnectStatus = false;
                     that.$toast.fail('连接失败');
                 }
-                var that = this;
-                // 打开Socket
-                socket.onopen = function (event) {
+
+                socket.onopen = function (event) { // 打开Socket
                     // 发送初始化消息
                     socket.send("Receiver Ready");
                     that.$toast.success('连接服务器成功');
                     console.log("Receiver Ready");
 
-                    var self = that
+                    const self = that;
                     // 监听消息
                     socket.onmessage = function (event) {
-                        self.DATA.shift();
-                        self.DATA.push(event.data);
                         console.log(event.data);
+                        if (event.length < 10) {
+                            self.DATA.shift();
+                            self.DATA.push(event.data);
+                        } else {
+                            let dataList = event.data.slice(1, event.data.length - 1).split(",").map(Number);
+                            for (let item in dataList) {
+                                self.DATA.shift();
+                                self.DATA.push(dataList[item]);
+                            }
+                        }
                     };
 
                     // 监听Socket的关闭
@@ -136,35 +143,35 @@
                 // this.RequireInit()
 
 
-				if (this.ConnectStatus === true) {
-					this.Draw(Flash)
-				}
+                if (this.ConnectStatus === true) {
+                    this.Draw(Flash)
+                }
 
             },
 
-			Draw(Flash) {
-				// 绘制图表
-				this.myChart.setOption(this.options);
+            Draw(Flash) {
+                // 绘制图表
+                this.myChart.setOption(this.options);
 
-				this.myChart.setOption({
-					xAxis: {
-						data: this.VALUE
-					},
-					series: [{
-						data: this.DATA
-					}]
-				});
+                this.myChart.setOption({
+                    xAxis: {
+                        data: this.VALUE
+                    },
+                    series: [{
+                        data: this.DATA
+                    }]
+                });
 
-				const that = this;
-				// 更新图表
-				setInterval(function () {
-					that.myChart.setOption({
-						series: [{
-							data: that.DATA
-						}]
-					});
-				}, Flash);
-			},
+                const that = this;
+                // 更新图表
+                setInterval(function () {
+                    that.myChart.setOption({
+                        series: [{
+                            data: that.DATA
+                        }]
+                    });
+                }, Flash);
+            },
 
             GlobalInit() {
                 // 全局引入
