@@ -1,10 +1,10 @@
 const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = {
-/*    // 打包APP
+    // 打包APP
     publicPath: process.env.NODE_ENV === 'production'
         ? './'
-        : '/',*/
+        : '/',
     configureWebpack: {
         plugins: [
             new CompressionPlugin({

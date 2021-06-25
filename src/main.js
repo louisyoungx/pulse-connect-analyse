@@ -4,14 +4,15 @@ import router from './router'
 import store from './store'
 import './registerServiceWorker'
 
-const xiao = createApp(App);
-xiao.use(store).use(router).mount('#app')
+const pulseConnectAnalyse = createApp(App);
+pulseConnectAnalyse.use(store).use(router).mount('#app')
 
 
 
 /* Element-Plus Component */
 import 'element-plus/lib/theme-chalk/index.css';
 import {
+    ElCard,
     ElButton,
     ElRow,
     ElCarousel,
@@ -20,7 +21,7 @@ import {
     ElPageHeader,
     ElDatePicker
 } from 'element-plus';
-xiao.use(ElButton).use(ElRow).use(ElCarousel).use(ElCarouselItem).use(ElImage).use(ElPageHeader).use(ElDatePicker)
+pulseConnectAnalyse.use(ElCard).use(ElButton).use(ElRow).use(ElCarousel).use(ElCarouselItem).use(ElImage).use(ElPageHeader).use(ElDatePicker)
 
 /* Vant Component */
 import {
@@ -89,7 +90,7 @@ import {
     TreeSelect,
     Uploader
 } from "vant";
-xiao.use(ActionSheet)
+pulseConnectAnalyse.use(ActionSheet)
     .use(AddressEdit)
     .use(AddressList)
     .use(Area)

@@ -1,4 +1,4 @@
-<template>
+<template class="main-container">
     <van-nav-bar title="Pulse-Chart">
         <template #right>
             <van-icon name="search" size="18"/>
@@ -11,19 +11,52 @@
             <div id="main" style="width: 100vw;height: 50vh"></div>
         </div>
     </div>
+    <div class="args-container">
+        <div class="args-content">
+            <div class="args-div">
+                <p>服务器：{{url}}</p>
+            </div>
+            <div class="args-div">
+                <p>数据量:{{settings.Num}} | FPS:{{fps}}HZ | 刷新:{{settings.Flash/1000}}s</p>
+            </div>
+            <br>
+            <div class="args-div">
+                <p>幅值：{{amplitude}}</p>
+                <p>心跳：{{heart_beats}} 次</p>
+                <p>心率：{{heart_rate}} 次/分</p>
+                <p>心电压：{{heart_voltage}} V</p>
+            </div>
+            <br>
+            <div class="args-div">
+                <p>特征值显示:{{isEigenvalue}} | 动画效果:{{isAnimation}}</p>
+            </div>
+        </div>
+    </div>
     <nav-buttom></nav-buttom>
 </template>
 
 <script>
     import NavButtom from "../../components/NavButtom";
+    import {mapState} from "vuex";
 
     export default {
         name: "index",
         components: {NavButtom},
         data() {
             return {
+                settings: {},
+                url: "",
+                fps: "",
+                amplitude: null,
+                heart_beats: null,
+                heart_voltage: null,
+                blood_pressure: null,
+                heart_rate: null,
+                isEigenvalue: "",
+                isAnimation: "",
                 myChart: {},
                 options: {
+                    animation: false,
                     // Make gradient line here
                     visualMap: {
                         show: false,
@@ -35,7 +68,7 @@
                     },
                     title: {
                         left: 'center',
-                        text: '心电图',
+                        text: 'Pulse Rate Values & Prediction',
                     },
                     tooltip: {
                         trigger: 'axis'
@@ -54,6 +87,7 @@
                         type: 'line',
                         smooth: true,
                         symbol: 'none',
+                        markPoint: null,
                     }]
                 },
                 DATA: [],
@@ -62,13 +96,45 @@
                 ConnectStatus: true,
             }
         },
+        computed: {
+            ...mapState([
+                'settings'
+            ]),
+        },
+        created() {
+            this.settings = this.$store.state.settings
+        },
         mounted() {
-            this.main(5000, 100, 100);
+            /* Num：  数据显示宽度
+             * Speed：单次更新个数
+             * Flash：更新间隔时间
+             */
+            let num = this.settings.Num;
+            let speed = this.settings.Speed;
+            let flash = this.settings.Flash;
+            this.fps = (speed / flash) * 1000
+            this.url = this.settings.Host + ":" + this.settings.Port;
+
+            if (this.settings.choice.eigenvalueOpen) {
+                this.options.series[0].markPoint = {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                        {type: 'min', name: '最小值'}
+                    ]
+                }
+                this.isEigenvalue = "开启"
+            } else { this.isEigenvalue = "关闭" }
+            if (this.settings.choice.animationOpen) {
+                this.options.animation = true
+                this.isAnimation = "开启"
+            } else { this.isAnimation = "关闭" }
+
+            this.main(150, 5, 100);
         },
         methods: {
             TCPClient() {
                 const that = this;
-                var socket = new WebSocket("ws://louisyoung.work:12000"); // 创建一个Socket实例
+                var socket = new WebSocket("ws://" + this.url); // 创建一个Socket实例
                 socket.onerror = function () {
                     this.ConnectStatus = false;
                     that.$toast.fail('连接失败');
@@ -83,16 +149,27 @@
                     const self = that;
                     // 监听消息
                     socket.onmessage = function (event) {
-                        console.log(event.data);
+                        // console.log(event.data);
                         if (event.length < 10) {
                             self.DATA.shift();
                             self.DATA.push(event.data);
                         } else {
                             let dataList = event.data.slice(1, event.data.length - 1).split(",").map(Number);
                             for (let item in dataList) {
-                                self.DATA.shift();
-                                self.DATA.push(dataList[item]);
+                                if (dataList[item] > 0) {
+                                    self.DATA.shift();
+                                    self.DATA.push(dataList[item]);
+                                }
                             }
+                            // 数据处理 -----------------------
+                            // console.log(self.DATA);
+                            const replacement = JSON.parse(JSON.stringify(self.DATA))
+                            self.heart_beats = self.countHeartBeats(replacement);
+                            self.amplitude = self.heartAmplitude(replacement);
+                            let time = self.settings.Num / self.fps
+                            self.heart_rate = self.calculateHeartRate(self.heart_beats, time)
+                            self.heart_voltage = self.heartVoltage(self.amplitude)
+                            // ------------------------------
                         }
                     };
 
@@ -192,13 +269,122 @@
                 this.myChart = echarts.init(document.getElementById('main'));
             },
 
+            // 标准偏差
+            standardDeviation(values) {
+                const avg = this.average(values);
+
+                const squareDiffs = values.map(function (value) {
+                    const diff = value - avg;
+                    const sqrDiff = diff * diff;
+                    return sqrDiff;
+                });
+
+                const avgSquareDiff = this.average(squareDiffs);
+                const stdDev = Math.sqrt(avgSquareDiff);
+                return stdDev;
+            },
+
+            // 求幅值平均值
+            average(data) {
+                const sum = data.reduce(function (sum, value) {
+                    return sum + value;
+                }, 0);
+                const avg = sum / data.length;
+                return avg;
+            },
+
+            // 心率计数
+            countHeartBeats(heartSignal) {
+                let currentMaximum = 0;
+                let beats = 0;
+                const mean = this.average(heartSignal);
+                const sthreshold = 0.2 * this.standardDeviation(heartSignal);
+                for (let i = 0; i < heartSignal.length; i++) {
+                    if (heartSignal[i] > mean + sthreshold) {
+                        heartSignal[i] = mean + sthreshold;
+                        if (!currentMaximum) {
+                            currentMaximum = 1;
+                            beats += 1;
+                        }
+                    } else {
+                        currentMaximum = 0;
+                    }
+                }
+                return beats;
+            },
+
+            // 幅值
+            heartAmplitude(heartSignal) {
+                let maxNum = 0;
+                for (let i = 0; i < heartSignal.length; i++) {
+                    if (heartSignal[i] > maxNum) {
+                        maxNum = heartSignal[i];
+                    }
+                }
+                return Math.round(maxNum);
+            },
+
+            // 每分钟心率计数
+            calculateHeartRate(heartBeats, time) {
+                // console.log(heartBeats, time, (heartBeats / time) * 60)
+                return (heartBeats / time) * 60
+            },
+
+            heartVoltage(amplitude) {
+                const voltage = (amplitude / 4096) * 3.3;
+                return Math.round(voltage * 1000) / 1000
+            }
 
         }
     }
 </script>
 
 <style scoped>
+    .main-container {
+        background: linear-gradient(
+                60deg,
+                rgba(84, 58, 183, 1) 0%,
+                rgba(0, 172, 193, 1) 100%
+        );
+    }
+
     .chart-main {
         background-color: #fff;
+    }
+
+    .args-container {
+        margin: 0 auto;
+        width: 90vw;
+        height: 35vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5vw;
+        filter: drop-shadow(0px 20px 10px rgba(0, 0, 0, 0.3));
+        transform: translateY(-10%);
+        background: linear-gradient(
+                60deg,
+                rgb(0, 54, 121) 0%,
+                rgba(0, 172, 193, 1) 100%
+        );
+    }
+
+    .args-content {
+        margin: 0;
+        width: 85vw;
+        height: 30vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .args-div {
+        color: #fff;
+        font-size: 20px;
+    }
+
+    .args-div p {
+        margin: 0;
     }
 </style>

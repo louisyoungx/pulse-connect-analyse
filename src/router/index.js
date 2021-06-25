@@ -1,6 +1,7 @@
-import { createRouter, createWebHistory } from 'vue-router'
+// 网页模式
+// import { createRouter, createWebHistory } from 'vue-router'
 // 打包APP
-// import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import home from '../views/home/index'
 const chart = () => import ('../views/chart/index');
 const user = () => import ("../views/user/index");
@@ -47,9 +48,10 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  // 网页模式
+  // history: createWebHistory(process.env.BASE_URL),
   // 打包APP
-  // history: createWebHashHistory(),
+  history: createWebHashHistory(),
   routes
 })
 

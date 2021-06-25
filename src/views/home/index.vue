@@ -1,10 +1,10 @@
 <template>
 	<div class="home-main">
 		<p></p>
-		<h1>脉搏悦动</h1>
-		<h2>Pulse Chart</h2>
+		<h1>Pulse Rate Values & Prediction</h1>
+		<h2>Connectivity & Server</h2>
 		<div class="Echarts">
-			<div id="main" style="width: 100vw;height: 50vh"></div>
+			<div id="main" style="width: 90vw;height: 50vh"></div>
 		</div>
 		<p></p>
 	</div>
