@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/pulse-xiao.iml" filepath="$PROJECT_DIR$/.idea/pulse-xiao.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pulse-connect-analyse.iml" filepath="$PROJECT_DIR$/.idea/pulse-connect-analyse.iml" />
     </modules>
   </component>
 </project>
