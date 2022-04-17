@@ -2,7 +2,7 @@
     <div class="setting-main">
         <van-nav-bar
                 title="设置"
-                right-text="更多"
+                right-text="帮助"
                 @click-right="More()"
         />
         <h2 class="setting-title">配置</h2>
@@ -79,13 +79,15 @@
                 </div>
             </van-form>
         </van-cell-group>
+        <br>
+        <br>
         <nav-buttom></nav-buttom>
     </div>
 </template>
 
 <script>
 
-    import NavButtom from "../../components/NavButtom";
+    import NavButtom from "@/components/NavButtom";
     import { Slider } from 'vant';
     import { Toast } from 'vant';
     import {mapState} from 'vuex'

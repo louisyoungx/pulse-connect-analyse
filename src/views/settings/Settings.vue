@@ -72,7 +72,7 @@
 </template>
 
 <script>
-    import NavButtom from "../components/NavButtom";
+    import NavButtom from "@/components/NavButtom";
     export default {
         name: "Settings",
         components: {NavButtom},

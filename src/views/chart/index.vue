@@ -32,11 +32,13 @@
             </div>
         </div>
     </div>
+    <br>
+    <br>
     <nav-buttom></nav-buttom>
 </template>
 
 <script>
-    import NavButtom from "../../components/NavButtom";
+    import NavButtom from "@/components/NavButtom";
     import {mapState} from "vuex";
 
     export default {

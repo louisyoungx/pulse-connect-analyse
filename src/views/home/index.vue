@@ -12,8 +12,8 @@
 </template>
 
 <script>
-	import NavButtom from "../../components/NavButtom";
-	import pulse from "../../assets/js/fakeData";
+	import NavButtom from "@/components/NavButtom";
+	import pulse from "@/assets/js/fakeData";
 	export default {
 		name: "index",
 		components: {NavButtom},

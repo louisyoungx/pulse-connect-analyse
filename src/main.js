@@ -7,8 +7,6 @@ import './registerServiceWorker'
 const pulseConnectAnalyse = createApp(App);
 pulseConnectAnalyse.use(store).use(router).mount('#app')
 
-
-
 /* Element-Plus Component */
 import 'element-plus/lib/theme-chalk/index.css';
 import {
