@@ -13,7 +13,7 @@ export default createStore({
       Number: 1,
       Flash: 100,
       FPS: "",
-      Host:"localhost",
+      Host:"rocke.top",
       Port:"12000",
     }
   },
