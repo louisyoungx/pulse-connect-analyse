@@ -153,7 +153,7 @@ export default {
                 this.$toast.fail('连接失败')
             }
 
-            socket.onopen = (event) => {
+            socket.onopen = event => {
                 // 打开Socket
                 // 发送初始化消息
                 socket.send('Receiver Ready')
@@ -161,12 +161,8 @@ export default {
                 console.log('Receiver Ready')
 
                 // 监听消息
-                socket.onmessage = (event) => {
-                    // console.log(event.data);
-                    if (event.length < 10) {
-                        this.DATA.shift()
-                        this.DATA.push(event.data)
-                    } else {
+                socket.onmessage = event => {
+                    const eachOneList = () => {
                         let dataList = event.data
                             .slice(1, event.data.length - 1)
                             .split(',')
@@ -177,37 +173,43 @@ export default {
                                 this.DATA.push(dataList[item])
                             }
                         }
-                        const dataHandler = () => {
-                            // 数据处理 -----------------------
-                            // console.log(this.DATA);
-                            const replacement = JSON.parse(
-                                JSON.stringify(this.DATA)
-                            )
-                            this.heart_beats = this.countHeartBeats(replacement)
-                            this.amplitude = this.heartAmplitude(replacement)
-                            let time = this.settings.Width / this.fps
-                            this.heart_rate = this.calculateHeartRate(
-                                this.heart_beats,
-                                time
-                            ).toFixed(1)
-                            this.heart_voltage = this.heartVoltage(this.amplitude).toFixed(3)
-                            // ------------------------------
-                        }
-                        const debounce = () => {
-                            if (this.shouldHandleData) {
-                                this.shouldHandleData = false
-                                setTimeout(() => {
-                                    dataHandler()
-                                    this.shouldHandleData = true
-                                }, 1000)
-                            }
-                        }
-                        debounce()
                     }
+                    const eachOneData = () => {
+                        this.DATA.shift()
+                        this.DATA.push(parseInt(event.data))
+                        this.VALUE.shift()
+                        this.VALUE.push(new Date().toLocaleTimeString())
+                    }
+                    eachOneData()
+                    const dataHandler = () => {
+                        // 数据处理
+                        let replacement = JSON.parse(JSON.stringify(this.DATA))
+                        replacement = replacement.filter(val => val > 0)
+                        this.heart_beats = this.countHeartBeats(replacement)
+                        this.amplitude = this.heartAmplitude(replacement)
+                        let time = this.settings.Width / this.fps
+                        this.heart_rate = this.calculateHeartRate(
+                            this.heart_beats,
+                            time
+                        ).toFixed(1)
+                        this.heart_voltage = this.heartVoltage(
+                            this.amplitude
+                        ).toFixed(3)
+                    }
+                    const debounce = () => {
+                        if (this.shouldHandleData) {
+                            this.shouldHandleData = false
+                            setTimeout(() => {
+                                dataHandler()
+                                this.shouldHandleData = true
+                            }, 1000)
+                        }
+                    }
+                    debounce()
                 }
 
                 // 监听Socket的关闭
-                socket.onclose = (event) => {
+                socket.onclose = event => {
                     this.$toast.fail('断开连接')
                     console.log('Connection closed')
                 }
@@ -225,7 +227,7 @@ export default {
             // 初始化，Num决定图表长度
             while (true) {
                 this.DATA.push(0)
-                this.VALUE.push('time')
+                this.VALUE.push('00:00:00')
                 if (i === Width) {
                     i = null
                     break
@@ -262,6 +264,9 @@ export default {
             // 更新图表
             setInterval(() => {
                 this.myChart.setOption({
+                    xAxis: {
+                        data: this.VALUE,
+                    },
                     series: [
                         {
                             data: this.DATA,
@@ -294,7 +299,7 @@ export default {
         standardDeviation(values) {
             const avg = this.average(values)
 
-            const squareDiffs = values.map((value) => {
+            const squareDiffs = values.map(value => {
                 const diff = value - avg
                 const sqrDiff = diff * diff
                 return sqrDiff
