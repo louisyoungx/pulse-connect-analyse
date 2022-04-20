@@ -11,7 +11,7 @@ export default createStore({
       },
       Width: 150,
       Number: 1,
-      Flash: 100,
+      Flash: 80,
       FPS: "",
       Host:"rocke.top",
       Port:"12000",
