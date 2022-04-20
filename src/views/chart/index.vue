@@ -146,27 +146,25 @@ export default {
     },
     methods: {
         TCPClient() {
-            const that = this
             var socket = new WebSocket('ws://' + this.url) // 创建一个Socket实例
-            socket.onerror = function() {
+            socket.onerror = () => {
                 this.ConnectStatus = false
-                that.$toast.fail('连接失败')
+                this.$toast.fail('连接失败')
             }
 
-            socket.onopen = function(event) {
+            socket.onopen = (event) => {
                 // 打开Socket
                 // 发送初始化消息
                 socket.send('Receiver Ready')
-                that.$toast.success('连接服务器成功')
+                this.$toast.success('连接服务器成功')
                 console.log('Receiver Ready')
 
-                const self = that
                 // 监听消息
-                socket.onmessage = function(event) {
+                socket.onmessage = (event) => {
                     // console.log(event.data);
                     if (event.length < 10) {
-                        self.DATA.shift()
-                        self.DATA.push(event.data)
+                        this.DATA.shift()
+                        this.DATA.push(event.data)
                     } else {
                         let dataList = event.data
                             .slice(1, event.data.length - 1)
@@ -174,32 +172,32 @@ export default {
                             .map(Number)
                         for (let item in dataList) {
                             if (dataList[item] > 0) {
-                                self.DATA.shift()
-                                self.DATA.push(dataList[item])
+                                this.DATA.shift()
+                                this.DATA.push(dataList[item])
                             }
                         }
                         const dataHandler = () => {
                             // 数据处理 -----------------------
-                            // console.log(self.DATA);
+                            // console.log(this.DATA);
                             const replacement = JSON.parse(
-                                JSON.stringify(self.DATA)
+                                JSON.stringify(this.DATA)
                             )
-                            self.heart_beats = self.countHeartBeats(replacement)
-                            self.amplitude = self.heartAmplitude(replacement)
-                            let time = self.settings.Width / self.fps
-                            self.heart_rate = self.calculateHeartRate(
-                                self.heart_beats,
+                            this.heart_beats = this.countHeartBeats(replacement)
+                            this.amplitude = this.heartAmplitude(replacement)
+                            let time = this.settings.Width / this.fps
+                            this.heart_rate = this.calculateHeartRate(
+                                this.heart_beats,
                                 time
                             )
-                            self.heart_voltage = self.heartVoltage(self.amplitude)
+                            this.heart_voltage = this.heartVoltage(this.amplitude)
                             // ------------------------------
                         }
                         const debounce = () => {
-                            if (self.shouldHandleData) {
-                                self.shouldHandleData = false
+                            if (this.shouldHandleData) {
+                                this.shouldHandleData = false
                                 setTimeout(() => {
                                     dataHandler()
-                                    self.shouldHandleData = true
+                                    this.shouldHandleData = true
                                 }, 1000)
                             }
                         }
@@ -208,8 +206,8 @@ export default {
                 }
 
                 // 监听Socket的关闭
-                socket.onclose = function(event) {
-                    that.$toast.fail('断开连接')
+                socket.onclose = (event) => {
+                    this.$toast.fail('断开连接')
                     console.log('Connection closed')
                 }
 
@@ -261,12 +259,11 @@ export default {
                 ],
             })
             // 更新图表
-            const that = this
-            setInterval(function() {
-                that.myChart.setOption({
+            setInterval(() => {
+                this.myChart.setOption({
                     series: [
                         {
-                            data: that.DATA,
+                            data: this.DATA,
                         },
                     ],
                 })
@@ -296,7 +293,7 @@ export default {
         standardDeviation(values) {
             const avg = this.average(values)
 
-            const squareDiffs = values.map(function(value) {
+            const squareDiffs = values.map((value) => {
                 const diff = value - avg
                 const sqrDiff = diff * diff
                 return sqrDiff
@@ -309,7 +306,7 @@ export default {
 
         // 求幅值平均值
         average(data) {
-            const sum = data.reduce(function(sum, value) {
+            const sum = data.reduce((sum, value) => {
                 return sum + value
             }, 0)
             const avg = sum / data.length
