@@ -2,8 +2,9 @@
     <div class="setting-main">
         <van-nav-bar
                 title="设置"
-                right-text="帮助"
+                right-text="高级"
                 @click-right="More()"
+                :fixed="true"
         />
         <h2 class="setting-title">配置</h2>
         <van-cell-group class="setting-card">

@@ -1,10 +1,11 @@
 <template class="main-container">
-    <van-nav-bar title="Pulse-Chart">
+    <van-nav-bar title="Pulse-Chart" :fixed="true">
         <template #right>
             <van-icon name="search" size="18" />
         </template>
     </van-nav-bar>
     <div class="chart-main">
+        <br />
         <br />
         <br />
         <div class="Echarts">
@@ -24,7 +25,7 @@
                 </p>
             </div>
             <br />
-            <div class="args-div">
+            <div class="args-div args-colomn">
                 <p>幅值: {{ amplitude }}</p>
                 <p>心跳: {{ heart_beats }} 次</p>
                 <p>心率: {{ heart_rate }} 次/分</p>
@@ -55,6 +56,7 @@ export default {
             settings: {},
             url: '',
             fps: '',
+            shouldHandleData: true,
             amplitude: null,
             heart_beats: null,
             heart_voltage: null,
@@ -76,7 +78,7 @@ export default {
                 },
                 title: {
                     left: 'center',
-                    text: 'Pulse Rate Values & Prediction',
+                    text: 'Pulse Wave & Prediction',
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -176,20 +178,32 @@ export default {
                                 self.DATA.push(dataList[item])
                             }
                         }
-                        // 数据处理 -----------------------
-                        // console.log(self.DATA);
-                        const replacement = JSON.parse(
-                            JSON.stringify(self.DATA)
-                        )
-                        self.heart_beats = self.countHeartBeats(replacement)
-                        self.amplitude = self.heartAmplitude(replacement)
-                        let time = self.settings.Width / self.fps
-                        self.heart_rate = self.calculateHeartRate(
-                            self.heart_beats,
-                            time
-                        )
-                        self.heart_voltage = self.heartVoltage(self.amplitude)
-                        // ------------------------------
+                        const dataHandler = () => {
+                            // 数据处理 -----------------------
+                            // console.log(self.DATA);
+                            const replacement = JSON.parse(
+                                JSON.stringify(self.DATA)
+                            )
+                            self.heart_beats = self.countHeartBeats(replacement)
+                            self.amplitude = self.heartAmplitude(replacement)
+                            let time = self.settings.Width / self.fps
+                            self.heart_rate = self.calculateHeartRate(
+                                self.heart_beats,
+                                time
+                            )
+                            self.heart_voltage = self.heartVoltage(self.amplitude)
+                            // ------------------------------
+                        }
+                        const debounce = () => {
+                            if (self.shouldHandleData) {
+                                self.shouldHandleData = false
+                                setTimeout(() => {
+                                    dataHandler()
+                                    self.shouldHandleData = true
+                                }, 1000)
+                            }
+                        }
+                        debounce()
                     }
                 }
 
@@ -390,6 +404,11 @@ export default {
 .args-div {
     color: #fff;
     font-size: 20px;
+}
+
+.args-colomn {
+    width: 70%;
+    padding-left: 25%;
 }
 
 .args-div p {
