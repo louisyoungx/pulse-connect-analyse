@@ -59,16 +59,16 @@
         </div>
         <div class="margin-top"></div>
     </div>
-    <nav-buttom></nav-buttom>
+    <nav-bottom></nav-bottom>
 </template>
 <script>
 /*    import store from "../../store";
     import api from "../../api";*/
 
-    import NavButtom from "../../components/NavButtom";
+    import NavBottom from "../../components/NavBottom";
 let subscribed=null
     export default {
-        components: {NavButtom},
+        components: {NavBottom},
         data() {
             return {
                 groupOrder: 0,

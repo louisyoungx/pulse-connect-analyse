@@ -97,18 +97,18 @@
         </van-cell-group>
         <br />
         <br />
-        <nav-buttom></nav-buttom>
+        <nav-bottom></nav-bottom>
     </div>
 </template>
 
 <script>
-import NavButtom from '@/components/NavButtom'
+import NavBottom from '@/components/NavBottom'
 import { Slider } from 'vant'
 import { Toast } from 'vant'
 import { mapState } from 'vuex'
 export default {
     name: 'index',
-    components: { NavButtom },
+    components: { NavBottom },
     data() {
         return {
             settings: {},

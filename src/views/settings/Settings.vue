@@ -67,15 +67,15 @@
                 </template>
             </van-cell>
         </van-cell-group>
-        <nav-buttom></nav-buttom>
+        <nav-bottom></nav-bottom>
     </div>
 </template>
 
 <script>
-    import NavButtom from "@/components/NavButtom";
+    import NavBottom from "@/components/NavBottom";
     export default {
         name: "Settings",
-        components: {NavButtom},
+        components: {NavBottom},
         data() {
             return {
                 choice:{

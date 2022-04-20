@@ -8,13 +8,13 @@
 
 <script>
     export default {
-        name: "NavButtom"
+        name: "NavBottom"
     }
 </script>
 
 <style scoped>
     .index-nav-buttom{
-        display: none;
+        display: flex;
     }
     @media only screen and (max-width: 991px){
         .index-nav-buttom{

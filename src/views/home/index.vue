@@ -8,15 +8,15 @@
 		</div>
 		<p></p>
 	</div>
-	<nav-buttom></nav-buttom>
+	<nav-bottom></nav-bottom>
 </template>
 
 <script>
-	import NavButtom from "@/components/NavButtom";
+	import NavBottom from "@/components/NavBottom";
 	import pulse from "@/assets/js/fakeData";
 	export default {
 		name: "index",
-		components: {NavButtom},
+		components: {NavBottom},
 		data() {
 			return{
 				myChart:{},

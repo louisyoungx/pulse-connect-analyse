@@ -41,16 +41,16 @@
     </div>
     <br />
     <br />
-    <nav-buttom></nav-buttom>
+    <nav-bottom></nav-bottom>
 </template>
 
 <script>
-import NavButtom from '@/components/NavButtom'
+import NavBottom from '@/components/NavBottom'
 import { mapState } from 'vuex'
 
 export default {
     name: 'index',
-    components: { NavButtom },
+    components: { NavBottom },
     data() {
         return {
             settings: {},
