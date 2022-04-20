@@ -142,7 +142,6 @@ export default {
         } else {
             this.isAnimation = '关闭'
         }
-        console.log(width, number, flash)
         this.main(width, number, flash)
     },
     methods: {
@@ -159,20 +158,14 @@ export default {
                 socket.send('Receiver Ready')
                 this.$toast.success('连接服务器成功')
                 console.log('Receiver Ready')
+                let firstData = true
 
                 // 监听消息
                 socket.onmessage = event => {
-                    const eachOneList = () => {
-                        let dataList = event.data
-                            .slice(1, event.data.length - 1)
-                            .split(',')
-                            .map(Number)
-                        for (let item in dataList) {
-                            if (dataList[item] > 0) {
-                                this.DATA.shift()
-                                this.DATA.push(dataList[item])
-                            }
-                        }
+                    if (firstData) {
+                        // 首次连接成功拿到第一个数据，将该数据填充到图表中
+                        this.init(parseInt(this.settings.Width), event.data) // 数据初始化
+                        firstData = false
                     }
                     const eachOneData = () => {
                         this.DATA.shift()
@@ -219,14 +212,14 @@ export default {
             }
         },
 
-        init(Width) {
+        init(Width, fillInBlank) {
             let i = 1
             this.DATA = []
             this.VALUE = []
             this.DATALength = Width
             // 初始化，Num决定图表长度
             while (true) {
-                this.DATA.push(0)
+                this.DATA.push(fillInBlank)
                 this.VALUE.push('00:00:00')
                 if (i === Width) {
                     i = null
@@ -235,12 +228,10 @@ export default {
                 i++
             }
         },
-        main(Width, Number, Flash) {
-            /* Width: 数据显示宽度
-             * Number: 单次更新个数
+        main(Flash) {
+            /*
              * Flash: 更新间隔时间
              */
-            this.init(Width) // 数据初始化
             this.TCPClient() // 建立WebSocket连接
             this.GlobalInit() // 基于准备好的dom，初始化echarts实例
             if (this.ConnectStatus === true) {
