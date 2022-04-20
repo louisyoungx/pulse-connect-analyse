@@ -19,7 +19,7 @@
             </div>
             <div class="args-div">
                 <p>
-                    数据量:{{ settings.Width }} | FPS:{{ fps }}HZ | 刷新:{{
+                    宽度:{{ settings.Width }} | FPS:{{ fps }}HZ | 刷新:{{
                         settings.Flash / 1000
                     }}s
                 </p>
@@ -142,6 +142,7 @@ export default {
         } else {
             this.isAnimation = '关闭'
         }
+        console.log(width, number, flash)
         this.main(width, number, flash)
     },
     methods: {
@@ -188,8 +189,8 @@ export default {
                             this.heart_rate = this.calculateHeartRate(
                                 this.heart_beats,
                                 time
-                            )
-                            this.heart_voltage = this.heartVoltage(this.amplitude)
+                            ).toFixed(1)
+                            this.heart_voltage = this.heartVoltage(this.amplitude).toFixed(3)
                             // ------------------------------
                         }
                         const debounce = () => {
