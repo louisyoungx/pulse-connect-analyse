@@ -105,6 +105,7 @@ export default {
             DATA: [],
             VALUE: [],
             DATALength: 0,
+            peaks: [],
             ConnectStatus: true,
         }
     },
@@ -127,10 +128,10 @@ export default {
 
         if (this.settings.choice.eigenvalueOpen) {
             this.options.series[0].markPoint = {
-                data: [
-                    { type: 'max', name: '最大值' },
-                    { type: 'min', name: '最小值' },
-                ],
+                data: this.peaks,
+                symbol: 'circle',
+                symbolSize: 10,
+                itemStyle: {color: 'rgba(255,0,0,0.4)'},
             }
             this.isEigenvalue = '开启'
         } else {
@@ -174,12 +175,15 @@ export default {
                         this.VALUE.push(new Date().toLocaleTimeString())
                     }
                     eachOneData()
+                    if (this.settings.choice.eigenvalueOpen) {
+                        this.peaks = this.heartPeaks(this.DATA)
+                    }
                     const dataHandler = () => {
                         // 数据处理
-                        let replacement = JSON.parse(JSON.stringify(this.DATA))
-                        replacement = replacement.filter(val => val > 0)
-                        this.heart_beats = this.countHeartBeats(replacement)
-                        this.amplitude = this.heartAmplitude(replacement)
+                        let pulseWave = JSON.parse(JSON.stringify(this.DATA))
+                        pulseWave = pulseWave.filter(val => val > 0)
+                        this.heart_beats = this.countHeartBeats(pulseWave)
+                        this.amplitude = this.heartAmplitude(pulseWave)
                         let time = this.settings.Width / this.fps
                         this.heart_rate = this.calculateHeartRate(
                             this.heart_beats,
@@ -249,10 +253,12 @@ export default {
                 series: [
                     {
                         data: this.DATA,
+                        markPoint: {
+                            data: this.peaks,
+                        },
                     },
                 ],
             })
-            // 更新图表
             setInterval(() => {
                 this.myChart.setOption({
                     xAxis: {
@@ -261,6 +267,9 @@ export default {
                     series: [
                         {
                             data: this.DATA,
+                            markPoint: {
+                                data: this.peaks,
+                            },
                         },
                     ],
                 })
@@ -284,6 +293,41 @@ export default {
             require('echarts/lib/component/tooltip')
             require('echarts/lib/component/title')
             this.myChart = echarts.init(document.getElementById('main'))
+        },
+
+        // 寻峰
+        heartPeaks(heartSignal) {
+            const windowWidth = parseInt(this.settings.Width / this.countHeartBeats(heartSignal)) // 窗口宽度 = 图表宽度 / 心跳数量
+            const threshold = this.average(heartSignal) // 阈值需大于平均值
+            const peaks = []
+            for (let i = 0; i < heartSignal.length; i++) {
+                if (
+                    heartSignal[i] < threshold ||
+                    heartSignal[i] < heartSignal[i - 1] ||
+                    heartSignal[i] < heartSignal[i + 1]
+                ) {
+                    continue
+                }
+                const start = Math.max(0, i - windowWidth)
+                const end = Math.min(heartSignal.length, i + windowWidth)
+                let tag = true
+                for (let j = start; j < end; j++) {
+                    if (j === i) {
+                        console.log(end - start)
+                        continue
+                    }
+                    if (heartSignal[j] > heartSignal[i]) {
+                        tag = false
+                        break
+                    }
+                }
+                if (tag) {
+                    peaks.push({
+                        coord: [i, heartSignal[i]],
+                    })
+                }
+            }
+            return peaks
         },
 
         // 标准偏差
@@ -312,6 +356,7 @@ export default {
 
         // 心率计数
         countHeartBeats(heartSignal) {
+            heartSignal = heartSignal.slice()
             let currentMaximum = 0
             let beats = 0
             const mean = this.average(heartSignal)

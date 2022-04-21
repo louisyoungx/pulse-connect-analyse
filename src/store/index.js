@@ -5,16 +5,18 @@ export default createStore({
   plugins: [createPersistedState()], // state持久化
   state: {
     settings: {
+      Host:"rocke.top",
+      Port:"12000",
+      Width: 150,
+      Number: 1,
+      Flash: 80,
+      FPS: 0,
       choice:{
         eigenvalueOpen: false,
         animationOpen: false,
       },
-      Width: 150,
-      Number: 1,
-      Flash: 80,
-      FPS: "",
-      Host:"rocke.top",
-      Port:"12000",
+      eigenvalueType: "triangle", // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none'
+      eigenvalueSize: 10,
     }
   },
   mutations: {
