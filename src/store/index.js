@@ -17,7 +17,8 @@ export default createStore({
       },
       eigenvalueType: "triangle", // 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none'
       eigenvalueSize: 10,
-    }
+    },
+    recording: []
   },
   mutations: {
     setting_saveSettings(state, setting_info) {
@@ -29,6 +30,17 @@ export default createStore({
     },
     setting_animationOpen(state) {
       // console.log(state.settings.choice.animationOpen)
+    },
+    recording_save(state, {recordingData, startTime, endTime}) {
+      state.recording.push({
+        name: new Date().toLocaleString(),
+        record: recordingData,
+        startTime: startTime,
+        endTime: endTime
+      })
+    },
+    recording_delete(state, index) {
+      state.recording = [...state.recording.slice(0, index), ...state.recording.slice(index + 1)]
     }
   },
   actions: {

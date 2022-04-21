@@ -1,7 +1,8 @@
 <template class="main-container">
-    <van-nav-bar title="Pulse-Chart" :fixed="true">
+    <van-nav-bar title="实时数据" :fixed="true">
         <template #right>
-            <van-icon name="search" size="18" />
+            <div v-if="!isRecord" @click="recordStart" class="record-container"><van-button round plain type="primary" class="record">开始录制</van-button></div>
+            <div v-if="isRecord" @click="recordEnd" class="record-container"><van-button round loading type="danger" loading-text="停止录制" class="record" /></div>
         </template>
     </van-nav-bar>
     <div class="chart-main">
@@ -54,6 +55,7 @@ export default {
     data() {
         return {
             settings: {},
+            isRecord: false,
             url: '',
             fps: '',
             shouldHandleData: true,
@@ -106,6 +108,8 @@ export default {
             VALUE: [],
             DATALength: 0,
             peaks: [],
+            cache: [],
+            cacheStartTime: null,
             ConnectStatus: true,
         }
     },
@@ -167,6 +171,10 @@ export default {
                         // 首次连接成功拿到第一个数据，将该数据填充到图表中
                         this.init(parseInt(this.settings.Width), event.data) // 数据初始化
                         firstData = false
+                    }
+                    if (this.isRecord) {
+                        // 如果录制开启，将数据存入缓存
+                        this.cache.push(event.data)
                     }
                     const eachOneData = () => {
                         this.DATA.shift()
@@ -396,11 +404,36 @@ export default {
             const voltage = (amplitude / 4096) * 3.3
             return Math.round(voltage * 1000) / 1000
         },
+
+        recordStart() {
+            this.$toast.fail('开始录制')
+            this.isRecord = true
+            this.cacheStartTime = new Date().getTime()
+        },
+
+        recordEnd() {
+            this.$store.commit('recording_save', {
+                recordingData: this.cache,
+                startTime: this.cacheStartTime,
+                endTime: new Date().getTime()
+            })
+            this.isRecord = false
+            this.$toast.success('保存成功')
+        }
     },
 }
 </script>
 
 <style scoped>
+.record-container {
+    height: 100%;
+    transform: translateY(0.6em);
+}
+
+.record {
+    height: 80%;
+}
+
 .main-container {
     background: linear-gradient(
         60deg,
