@@ -6,7 +6,7 @@
             @click-right="More()"
             :fixed="true"
         />
-        <h2 class="setting-title">配置</h2>
+        <h2 class="cell-title">配置</h2>
         <van-cell-group class="setting-card">
             <van-form>
                 <van-field
@@ -34,13 +34,13 @@
                 />
                 <van-field
                     v-model="settings.FPS"
-                    name="当前FPS"
-                    label="当前FPS"
+                    name="当前刷新率（FPS）"
+                    label="当前刷新率（FPS）"
                     disabled
                 />
             </van-form>
         </van-cell-group>
-        <h2 class="setting-title">图表设置</h2>
+        <h2 class="cell-title">图表设置</h2>
         <van-cell-group class="setting-card">
             <van-cell title="显示特征值" label="显示脉搏特征点">
                 <template #right-icon>
@@ -61,7 +61,7 @@
                 </template>
             </van-cell>
         </van-cell-group>
-        <h2 class="setting-title">服务器设置</h2>
+        <h2 class="cell-title">服务器设置</h2>
         <van-cell-group class="setting-card">
             <van-form>
                 <van-field
@@ -80,11 +80,12 @@
                 />
             </van-form>
         </van-cell-group>
-        <h2 class="setting-title">保存</h2>
+        <h2 class="cell-title">保存</h2>
         <van-cell-group class="setting-card">
             <van-form @submit="saveSettings()">
                 <div style="margin: 16px;">
                     <van-button
+                        class="last-element"
                         @click="saveSettings()"
                         round
                         block
@@ -95,8 +96,6 @@
                 </div>
             </van-form>
         </van-cell-group>
-        <br />
-        <br />
         <nav-bottom></nav-bottom>
     </div>
 </template>
@@ -119,9 +118,9 @@ export default {
             this.$toast.fail('没有访问权限')
         },
         updateFPS() {
-            const speed = parseInt(this.settings.Number)
+            const number = parseInt(this.settings.Number)
             const flash = parseInt(this.settings.Flash)
-            const FPS = (speed / flash) * 1000
+            const FPS = (number / flash) * 1000
             this.settings.FPS = FPS.toString() + ' (HZ)'
         },
         saveSettings() {
@@ -155,14 +154,7 @@ export default {
     height: 100vh;
     background-color: #f7f8fa;
 }
-.setting-title {
-    margin: 0;
-    padding: 15px 16px 5px;
-    color: rgba(69, 90, 100, 0.6);
-    font-weight: normal;
-    font-size: 14px;
-    line-height: 16px;
-}
+
 .setting-card {
     margin: 12px 12px 0;
     overflow: hidden;
