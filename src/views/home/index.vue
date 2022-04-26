@@ -58,7 +58,7 @@
         <div class="args-container last-element">
             <div class="args-content">
                 <div class="args-div args-colomn">
-                    <p>数据频率: {{ fps }}</p>
+                    <p>数据频率: {{ fps }} HZ</p>
                     <p>幅值: {{ amplitude }}</p>
                     <p>心跳: {{ heart_beats }} 次</p>
                     <p>心率: {{ heart_rate }} 次/分</p>
@@ -178,11 +178,10 @@ export default {
             this.isAnimation = '关闭'
         }
         this.main(width, number, flash)
-        this.display(this.$store.state.recording[0])
+        this.fillInData(this.$store.state.recording[0].record)
     },
     methods: {
         display(wave) {
-            console.log(wave)
             let width = parseInt(this.settings.Width)
             let number = parseInt(this.settings.Number)
             let flash = parseInt(this.settings.Flash)
@@ -261,6 +260,36 @@ export default {
                 this.DATA.push(fillInBlank)
                 this.VALUE.push('00:00:00')
                 if (i === Width) {
+                    i = null
+                    break
+                }
+                i++
+            }
+        },
+
+        fillInData(dataList) {
+            let i = 1
+            let Width = parseInt(this.settings.Width)
+            this.DATA = []
+            this.VALUE = []
+            // 初始化，Num决定图表长度
+            while (true) {
+                this.DATA.push(0)
+                this.VALUE.push('00:00:00')
+                if (i >= Width) {
+                    i = null
+                    break
+                }
+                i++
+            }
+            i = 0
+            // 填充初始数据
+            while (true) {
+                this.DATA.shift()
+                this.DATA.push(dataList[i])
+                this.VALUE.shift()
+                this.VALUE.push('00:00:00')
+                if (i >= Width - 1 || !dataList[i + 1]) {
                     i = null
                     break
                 }
