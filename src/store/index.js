@@ -32,7 +32,7 @@ export default createStore({
       // console.log(state.settings.choice.animationOpen)
     },
     recording_save(state, {recordingData, startTime, endTime}) {
-      state.recording.push({
+      state.recording.unshift({
         name: new Date().toLocaleString(),
         record: recordingData,
         startTime: startTime,
