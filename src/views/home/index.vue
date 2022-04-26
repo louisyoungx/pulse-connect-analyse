@@ -22,7 +22,7 @@
         </div>
     </div>
     <div v-if="!isPlayback">
-        <h2 class="history-title">历史记录</h2>
+        <h2 class="cell-title">历史记录</h2>
         <van-cell-group class="history-container last-element" inset>
             <van-cell
                 v-for="(item, index) in $store.state.recording"
@@ -42,13 +42,28 @@
             @select="sheetSelect"
         />
     </div>
-    <div v-if="isPlayback" class="args-container last-element">
-        <div class="args-content">
-            <div class="args-div args-colomn">
-                <p>幅值: {{ amplitude }}</p>
-                <p>心跳: {{ heart_beats }} 次</p>
-                <p>心率: {{ heart_rate }} 次/分</p>
-                <p>心电压: {{ heart_voltage }} V</p>
+    <div v-if="isPlayback">
+        <div class="display-options offset-top">
+            <div @click="stopPlayback" class="display-choice">
+                <van-icon name="close" color="rgb(25, 137, 250)" size="5vh" />
+            </div>
+            <div @click="suspendPlayback" class="display-choice">
+                <van-icon v-if="!suspend" name="pause-circle-o" color="rgb(25, 137, 250)" size="7vh" />
+                <van-icon v-if="suspend" name="play-circle-o" color="rgb(25, 137, 250)" size="7vh" />
+            </div>
+            <div @click="replayPlayback" class="display-choice">
+                <van-icon name="replay" color="rgb(25, 137, 250)" size="5vh" />
+            </div>
+        </div>
+        <div class="args-container last-element">
+            <div class="args-content">
+                <div class="args-div args-colomn">
+                    <p>数据频率: {{ fps }}</p>
+                    <p>幅值: {{ amplitude }}</p>
+                    <p>心跳: {{ heart_beats }} 次</p>
+                    <p>心率: {{ heart_rate }} 次/分</p>
+                    <p>心电压: {{ heart_voltage }} V</p>
+                </div>
             </div>
         </div>
     </div>
@@ -123,9 +138,10 @@ export default {
             VALUE: [],
             DATALength: 0,
             peaks: [],
-            cache: [],
-            cacheStartTime: null,
             ConnectStatus: true,
+            running: null,
+            fps: 0,
+            suspend: false,
         }
     },
     computed: {
@@ -142,7 +158,6 @@ export default {
         let width = parseInt(this.settings.Width)
         let number = parseInt(this.settings.Number)
         let flash = parseInt(this.settings.Flash)
-        this.fps = (number / flash) * 1000
         this.url = this.settings.Host + ':' + this.settings.Port
 
         if (this.settings.choice.eigenvalueOpen) {
@@ -163,85 +178,77 @@ export default {
             this.isAnimation = '关闭'
         }
         this.main(width, number, flash)
+        this.display(this.$store.state.recording[0])
     },
     methods: {
-        ReceiveClient() {
-            const timing = setTimeout(() => {
-                this.ConnectStatus = false
-                this.$toast.fail('连接超时')
-                client.close()
-            }, 5000)
-            const client = new WebSocket('ws://' + this.url) // 创建一个WebSocket实例
-            client.onerror = () => {
-                this.ConnectStatus = false
-                this.$toast.fail('连接失败')
-                clearTimeout(timing)
-                client.close()
-            }
-            client.onopen = event => {
-                // 打开WebSocket
-                // 发送初始化消息
-                clearTimeout(timing)
-                client.send('Receiver Ready')
-                this.$toast.success('连接服务器成功')
-                console.log('Receiver Ready')
-                let firstData = true
-
-                // 监听消息
-                client.onmessage = event => {
-                    if (firstData) {
+        display(wave) {
+            console.log(wave)
+            let width = parseInt(this.settings.Width)
+            let number = parseInt(this.settings.Number)
+            let flash = parseInt(this.settings.Flash)
+            let duration = (wave.endTime - wave.startTime) / 1000
+            let fps = wave.record.length / duration
+            let rate = (1 / fps)
+            this.fps = fps.toFixed(0)
+            let i = 0
+            const handler = (eachData) => {
+                const firstCheck = () => {
+                    if (i === 0) {
                         // 首次连接成功拿到第一个数据，将该数据填充到图表中
-                        this.init(parseInt(this.settings.Width), event.data) // 数据初始化
-                        firstData = false
+                        this.init(width, 0) // 数据初始化
                     }
-                    if (this.isPlayback) {
-                        // 如果录制开启，将数据存入缓存
-                        this.cache.push(event.data)
-                    }
-                    const eachOneData = () => {
-                        this.DATA.shift()
-                        this.DATA.push(parseInt(event.data))
-                        this.VALUE.shift()
-                        this.VALUE.push(new Date().toLocaleTimeString())
-                    }
-                    eachOneData()
+                }
+                const eachOneData = () => {
+                    this.DATA.shift()
+                    this.DATA.push(eachData)
+                    this.VALUE.shift()
+                    this.VALUE.push(new Date(wave.startTime + rate * i * 1000).toLocaleTimeString())
+                }
+                const peakCheck = () => {
                     if (this.settings.choice.eigenvalueOpen) {
                         this.peaks = this.heartPeaks(this.DATA)
                     }
-                    const dataHandler = () => {
-                        // 数据处理
-                        let pulseWave = JSON.parse(JSON.stringify(this.DATA))
-                        pulseWave = pulseWave.filter(val => val > 0)
-                        this.heart_beats = this.countHeartBeats(pulseWave)
-                        this.amplitude = this.heartAmplitude(pulseWave)
-                        let time = this.settings.Width / this.fps
-                        this.heart_rate = this.calculateHeartRate(
-                            this.heart_beats,
-                            time
-                        ).toFixed(1)
-                        this.heart_voltage = this.heartVoltage(
-                            this.amplitude
-                        ).toFixed(3)
+                }
+                const dataHandler = () => {
+                    // 数据处理
+                    let pulseWave = JSON.parse(JSON.stringify(this.DATA))
+                    pulseWave = pulseWave.filter(val => val > 0)
+                    this.heart_beats = this.countHeartBeats(pulseWave)
+                    this.amplitude = this.heartAmplitude(pulseWave)
+                    let time = this.settings.Width / this.fps
+                    this.heart_rate = this.calculateHeartRate(
+                        this.heart_beats,
+                        time
+                    ).toFixed(1)
+                    this.heart_voltage = this.heartVoltage(
+                        this.amplitude
+                    ).toFixed(3)
+                }
+                const debounce = () => {
+                    if (this.shouldHandleData) {
+                        this.shouldHandleData = false
+                        setTimeout(() => {
+                            dataHandler()
+                            this.shouldHandleData = true
+                        }, 1000)
                     }
-                    const debounce = () => {
-                        if (this.shouldHandleData) {
-                            this.shouldHandleData = false
-                            setTimeout(() => {
-                                dataHandler()
-                                this.shouldHandleData = true
-                            }, 1000)
-                        }
-                    }
+                }
+                if (!this.suspend) {
+                    firstCheck()
+                    eachOneData()
+                    peakCheck()
                     debounce()
                 }
-
-                // 监听WebSocket的关闭
-                client.onclose = event => {
-                    this.$toast.fail('断开连接')
-                    console.log('Connection closed')
-                    client.close()
-                }
             }
+            this.running = setInterval(() => {
+                if (i < (wave.record.length - number - 1)) {
+                    handler(wave.record[i])
+                    i++
+                } else {
+                    this.$toast.success('回放结束')
+                    clearInterval(this.running)
+                }
+            }, rate * 1000)
         },
 
         init(Width, fillInBlank) {
@@ -260,11 +267,11 @@ export default {
                 i++
             }
         },
+
         main(Flash) {
             /*
              * Flash: 更新间隔时间
              */
-            this.ReceiveClient() // 建立WebSocket连接
             this.GlobalInit() // 基于准备好的dom，初始化echarts实例
             if (this.ConnectStatus === true) {
                 this.Draw(Flash)
@@ -432,6 +439,16 @@ export default {
 
         stopPlayback() {
             this.isPlayback = false
+            clearInterval(this.running)
+        },
+
+        suspendPlayback() {
+            this.suspend = !this.suspend
+        },
+
+        replayPlayback() {
+            clearInterval(this.running)
+            this.display(this.$store.state.recording[this.sheetNo])
         },
 
         duration(startTime, endTime) {
@@ -446,97 +463,36 @@ export default {
             }
         },
 
-        sheetSelect(item, index) {
+        sheetSelect(item) {
             this.sheetShow = false
+            if (item.name === '回放') {
+                this.startPlayback()
+                this.display(this.$store.state.recording[this.sheetNo])
+            }
             if (item.name === '删除') {
                 Dialog.confirm({
                     title: '注意',
                     message:
                         '删除将失去此条记录所有数据',
                 })
-                    .then(() => {
-                        // on confirm
-                        this.$store.commit('recording_delete', this.sheetNo)
-                    })
-                    .catch(() => {
-                        // on cancel
-                        console.log('cancel')
-                    })
+                .then(() => {
+                    // on confirm
+                    this.$store.commit('recording_delete', this.sheetNo)
+                })
+                .catch(() => {
+                    // on cancel
+                    console.log('cancel')
+                })
             }
         },
+
     },
 }
 </script>
 
 <style scoped>
-.record-container {
-    height: 100%;
-    transform: translateY(0.6em);
-}
-
-.record {
-    height: 80%;
-}
-
-.main-container {
-    background: linear-gradient(
-        60deg,
-        rgba(84, 58, 183, 1) 0%,
-        rgba(0, 172, 193, 1) 100%
-    );
-}
-
-.chart-main {
-    background-color: #fff;
-}
-
 .args-container {
-    margin: 0 auto;
-    width: 90vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 5vw;
-    filter: drop-shadow(0px 20px 10px rgba(0, 0, 0, 0.3));
-    transform: translateY(-10%);
-    background: linear-gradient(
-        60deg,
-        rgb(0, 54, 121) 0%,
-        rgba(0, 172, 193, 1) 100%
-    );
-}
-
-.args-content {
-    margin: 0;
-    width: 85vw;
-    height: 20vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.args-div {
-    color: #fff;
-    font-size: 20px;
-}
-
-.args-colomn {
-    width: 70%;
-    padding-left: 25%;
-}
-
-.args-div p {
-    margin: 0;
-}
-
-.history-title {
-    margin: 0;
-    padding: 15px 16px 5px;
-    color: rgba(69, 90, 100, 0.6);
-    font-weight: normal;
-    font-size: 14px;
-    line-height: 16px;
+    height: 30vh;
 }
 
 .history-container {
@@ -544,7 +500,17 @@ export default {
     overflow: auto;
 }
 
-.last-element {
-    margin-bottom: 54px;
+.display-options {
+    width: 60vw;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.display-choice:active {
+    background: rgb(223, 228, 233);
+    border-radius: 3.5vh;
 }
 </style>
