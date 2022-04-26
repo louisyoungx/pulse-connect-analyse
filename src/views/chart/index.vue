@@ -6,11 +6,8 @@
         </template>
     </van-nav-bar>
     <div class="chart-main">
-        <br />
-        <br />
-        <br />
         <div class="Echarts">
-            <div id="main" style="width: 100vw;height: 50vh"></div>
+            <div id="main" style="width: 100vw; height: 50vh"></div>
         </div>
     </div>
     <div class="args-container">
@@ -321,7 +318,6 @@ export default {
                 let tag = true
                 for (let j = start; j < end; j++) {
                     if (j === i) {
-                        console.log(end - start)
                         continue
                     }
                     if (heartSignal[j] > heartSignal[i]) {
@@ -486,4 +482,5 @@ export default {
 .args-div p {
     margin: 0;
 }
+
 </style>
