@@ -147,29 +147,36 @@ export default {
         this.main(width, number, flash)
     },
     methods: {
-        TCPClient() {
-            var socket = new WebSocket('ws://' + this.url) // 创建一个Socket实例
-            socket.onerror = () => {
+        ReceiveClient() {
+            const timing = setTimeout(() => {
+                this.ConnectStatus = false
+                this.$toast.fail('连接超时')
+                client.close()
+            }, 5000)
+            const client = new WebSocket('ws://' + this.url) // 创建一个WebSocket实例
+            client.onerror = () => {
                 this.ConnectStatus = false
                 this.$toast.fail('连接失败')
+                clearTimeout(timing)
+                client.close()
             }
-
-            socket.onopen = event => {
-                // 打开Socket
+            client.onopen = event => {
+                // 打开WebSocket
                 // 发送初始化消息
-                socket.send('Receiver Ready')
+                clearTimeout(timing)
+                client.send('Receiver Ready')
                 this.$toast.success('连接服务器成功')
                 console.log('Receiver Ready')
                 let firstData = true
 
                 // 监听消息
-                socket.onmessage = event => {
+                client.onmessage = event => {
                     if (firstData) {
                         // 首次连接成功拿到第一个数据，将该数据填充到图表中
                         this.init(parseInt(this.settings.Width), event.data) // 数据初始化
                         firstData = false
                     }
-                    if (this.isRecord) {
+                    if (this.isPlayback) {
                         // 如果录制开启，将数据存入缓存
                         this.cache.push(event.data)
                     }
@@ -210,14 +217,12 @@ export default {
                     debounce()
                 }
 
-                // 监听Socket的关闭
-                socket.onclose = event => {
+                // 监听WebSocket的关闭
+                client.onclose = event => {
                     this.$toast.fail('断开连接')
                     console.log('Connection closed')
+                    client.close()
                 }
-
-                // 关闭Socket…
-                //socket.close()
             }
         },
 
@@ -241,7 +246,7 @@ export default {
             /*
              * Flash: 更新间隔时间
              */
-            this.TCPClient() // 建立WebSocket连接
+            this.ReceiveClient() // 建立WebSocket连接
             this.GlobalInit() // 基于准备好的dom，初始化echarts实例
             if (this.ConnectStatus === true) {
                 this.Draw(Flash)
