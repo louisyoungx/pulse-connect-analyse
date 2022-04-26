@@ -10,16 +10,16 @@
             <div id="main" style="width: 100vw; height: 50vh"></div>
         </div>
     </div>
-    <div class="args-container">
+    <div class="args-container offset-top last-element">
         <div class="args-content">
             <div class="args-div">
                 <p>服务器: {{ url }}</p>
             </div>
             <div class="args-div">
                 <p>
-                    宽度:{{ settings.Width }} | FPS:{{ fps }}HZ | 刷新:{{
-                        settings.Flash / 1000
-                    }}s
+                    宽度:{{ settings.Width }} | 频率:{{ fps }}HZ | 刷新:{{
+                        (settings.Number / settings.Flash) * 1000
+                    }}HZ
                 </p>
             </div>
             <br />
@@ -37,8 +37,6 @@
             </div>
         </div>
     </div>
-    <br />
-    <br />
     <nav-bottom></nav-bottom>
 </template>
 
@@ -124,7 +122,6 @@ export default {
         let width = parseInt(this.settings.Width)
         let number = parseInt(this.settings.Number)
         let flash = parseInt(this.settings.Flash)
-        this.fps = (number / flash) * 1000
         this.url = this.settings.Host + ':' + this.settings.Port
 
         if (this.settings.choice.eigenvalueOpen) {
@@ -168,17 +165,28 @@ export default {
                 this.$toast.success('连接服务器成功')
                 console.log('Receiver Ready')
                 let firstData = true
+                const startTime = new Date().getTime()
+                let count = 0
 
                 // 监听消息
                 client.onmessage = event => {
-                    if (firstData) {
-                        // 首次连接成功拿到第一个数据，将该数据填充到图表中
-                        this.init(parseInt(this.settings.Width), event.data) // 数据初始化
-                        firstData = false
+                    const firstCheck = () => {
+                        if (firstData) {
+                            // 首次连接成功拿到第一个数据，将该数据填充到图表中
+                            this.init(parseInt(this.settings.Width), event.data) // 数据初始化
+                            firstData = false
+                        }
                     }
-                    if (this.isPlayback) {
-                        // 如果录制开启，将数据存入缓存
-                        this.cache.push(event.data)
+                    const recordCheck = () => {
+                        if (this.isRecord) {
+                            // 如果录制开启，将数据存入缓存
+                            this.cache.push(parseInt(event.data))
+                        }
+                    }
+                    const fpsComputer = () => {
+                        count++
+                        let seconds = new Date().getTime() - startTime
+                        this.fps = (count / (seconds / 1000)).toFixed(0)
                     }
                     const eachOneData = () => {
                         this.DATA.shift()
@@ -186,9 +194,10 @@ export default {
                         this.VALUE.shift()
                         this.VALUE.push(new Date().toLocaleTimeString())
                     }
-                    eachOneData()
-                    if (this.settings.choice.eigenvalueOpen) {
-                        this.peaks = this.heartPeaks(this.DATA)
+                    const peakCheck = () => {
+                        if (this.settings.choice.eigenvalueOpen) {
+                            this.peaks = this.heartPeaks(this.DATA)
+                        }
                     }
                     const dataHandler = () => {
                         // 数据处理
@@ -214,6 +223,11 @@ export default {
                             }, 1000)
                         }
                     }
+                    firstCheck()
+                    recordCheck()
+                    fpsComputer()
+                    eachOneData()
+                    peakCheck()
                     debounce()
                 }
 
@@ -242,6 +256,7 @@ export default {
                 i++
             }
         },
+
         main(Flash) {
             /*
              * Flash: 更新间隔时间
@@ -409,6 +424,7 @@ export default {
         recordStart() {
             this.$toast.fail('开始录制')
             this.isRecord = true
+            this.cache = []
             this.cacheStartTime = new Date().getTime()
         },
 
@@ -426,66 +442,4 @@ export default {
 </script>
 
 <style scoped>
-.record-container {
-    height: 100%;
-    transform: translateY(0.6em);
-}
-
-.record {
-    height: 80%;
-}
-
-.main-container {
-    background: linear-gradient(
-        60deg,
-        rgba(84, 58, 183, 1) 0%,
-        rgba(0, 172, 193, 1) 100%
-    );
-}
-
-.chart-main {
-    background-color: #fff;
-}
-
-.args-container {
-    margin: 0 auto;
-    width: 90vw;
-    height: 35vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 5vw;
-    filter: drop-shadow(0px 20px 10px rgba(0, 0, 0, 0.3));
-    transform: translateY(-10%);
-    background: linear-gradient(
-        60deg,
-        rgb(0, 54, 121) 0%,
-        rgba(0, 172, 193, 1) 100%
-    );
-}
-
-.args-content {
-    margin: 0;
-    width: 85vw;
-    height: 30vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.args-div {
-    color: #fff;
-    font-size: 20px;
-}
-
-.args-colomn {
-    width: 70%;
-    padding-left: 25%;
-}
-
-.args-div p {
-    margin: 0;
-}
-
 </style>
