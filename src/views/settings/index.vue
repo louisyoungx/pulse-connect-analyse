@@ -6,7 +6,7 @@
             @click-right="More()"
             :fixed="true"
         />
-        <h2 class="cell-title">配置</h2>
+        <h2 class="cell-title first-element">刷新设置</h2>
         <van-cell-group class="setting-card">
             <van-form>
                 <van-field
@@ -80,8 +80,7 @@
                 />
             </van-form>
         </van-cell-group>
-        <h2 class="cell-title">保存</h2>
-        <van-cell-group class="setting-card">
+        <van-cell-group class="setting-card saveButton">
             <van-form @submit="saveSettings()">
                 <div style="margin: 16px;">
                     <van-button
@@ -159,5 +158,11 @@ export default {
     margin: 12px 12px 0;
     overflow: hidden;
     border-radius: 8px;
+}
+
+.saveButton {
+    width: 100vw;
+    position: fixed;
+    bottom: 0;
 }
 </style>
