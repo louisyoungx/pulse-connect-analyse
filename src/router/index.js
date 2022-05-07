@@ -1,13 +1,5 @@
-// 网页模式
-// import { createRouter, createWebHistory } from 'vue-router'
-// 打包APP
 import { createRouter, createWebHashHistory } from 'vue-router'
-import home from '../views/home/index'
-const chart = () => import ('../views/chart/index');
-const user = () => import ("../views/user/index");
-const settings = () => import ("../views/settings/index");
-const login = () => import ("../views/user/login");
-const register = () => import ("../views/user/register");
+import home from '@/views/home/index'
 
 const routes = [
   {
@@ -23,34 +15,31 @@ const routes = [
   {
     path: '/chart',
     name: 'chart',
-    component: chart
+    component: import ('@/views/chart/index')
   },
   {
     path: '/user',
     name: 'user',
-    component: user
+    component: import ("@/views/user/index")
   },
   {
     path: '/settings',
     name: 'settings',
-    component: settings
+    component: import ("@/views/settings/index")
   },
   {
     path: '/login',
     name: 'login',
-    component: login
+    component: import ("@/views/user/login")
   },
   {
     path: '/register',
     name: 'register',
-    component: register
+    component: import ("@/views/user/register")
   },
 ]
 
 const router = createRouter({
-  // 网页模式
-  // history: createWebHistory(process.env.BASE_URL),
-  // 打包APP
   history: createWebHashHistory(),
   routes
 })
