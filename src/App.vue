@@ -77,6 +77,10 @@
     transform: translateY(-4vh);
 }
 
+.first-element {
+    margin-top: 54px !important;
+}
+
 .last-element {
     margin-bottom: 54px !important;
 }
