@@ -177,7 +177,7 @@ export default {
         } else {
             this.isAnimation = '关闭'
         }
-        this.main(width, number, flash)
+        this.main(flash)
         this.fillInData(this.$store.state.recording[0].record)
     },
     methods: {
@@ -221,7 +221,8 @@ export default {
                     ).toFixed(1)
                     this.heart_voltage = this.heartVoltage(
                         this.amplitude
-                    ).toFixed(3)
+                    )//.toFixed(3)
+                    this.heart_voltage = (this.heart_voltage / 1000).toFixed(3)
                 }
                 const debounce = () => {
                     if (this.shouldHandleData) {
