@@ -212,7 +212,8 @@ export default {
                         ).toFixed(1)
                         this.heart_voltage = this.heartVoltage(
                             this.amplitude
-                        ).toFixed(3)
+                        )
+                        this.heart_voltage = (this.heart_voltage / 1000).toFixed(3)
                     }
                     const debounce = () => {
                         if (this.shouldHandleData) {
